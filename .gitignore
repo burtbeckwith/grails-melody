@@ -11,7 +11,6 @@ stacktrace.log
 .DS_Store
 /target/
 /out/
-/web-app/plugins
-/web-app/WEB-INF/classes
+/web-app
 /.link_to_grails_plugins/
 /target-eclipse/

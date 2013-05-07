@@ -7,45 +7,25 @@ import net.bull.javamelody.Parameters
 import net.bull.javamelody.SessionListener
 
 class GrailsMelodyGrailsPlugin {
-	
-	// the plugin version
+
 	def version = "1.21"
-	
-	// the version or versions of Grails the plugin is designed for
 	def grailsVersion = "2.0 > *"
-	
-	// the other plugins this plugin depends on
-	def dependsOn = [:]
-	
+
 	def loadAfter = [
 		'spring-security-core',
 		'acegi',
 		'shiro'
 	]
-	
-	// resources that are excluded from plugin packaging
-	def pluginExcludes = [
-		"grails-app/views/error.gsp"
-	]
 
 	def author = "Liu Chao"
 	def authorEmail = "liuchao@goal98.com"
 	def title = "Grails Java Melody Plugin"
-	def description = '''\\
-Integrate Java Melody Monitor into grails application.
-'''
-
-	// URL to the plugin's documentation
-	def documentation = "http://grails.org/GrailsMelody+Plugin"
+	def description = 'Integrate Java Melody Monitor into grails application.'
+	def documentation = "http://grails.org/plugin/grails-melody"
 
 	def doWithSpring = {
 		//Wrap grails datasource with java melody JdbcWapper
-		'grailsDataSourceBeanPostProcessor'(GrailsDataSourceBeanPostProcessor)
-
-	}
-
-	def doWithApplicationContext = {applicationContext ->
-
+		grailsDataSourceBeanPostProcessor(GrailsDataSourceBeanPostProcessor)
 	}
 
 	def getWebXmlFilterOrder() {
@@ -62,7 +42,7 @@ Integrate Java Melody Monitor into grails application.
 				'filter-name'('monitoring')
 				'filter-class'(MonitoringFilter.name)
 				//load configuration from GrailsMelodyConfig.groovy
-				def conf = GrailsMelodyUtil.grailsMelodyConfig?.javamelody
+				def conf = GrailsMelodyUtil.getGrailsMelodyConfig(application)?.javamelody
 				conf?.each {
 					String name = it.key
 					String value = it.value
@@ -87,13 +67,11 @@ Integrate Java Melody Monitor into grails application.
 
 		def filterMapping = xml.'filter-mapping'
 		filterMapping[filterMapping.size() - 1] + {
-
 			'listener' { 'listener-class'(SessionListener.name) }
 		}
-
 	}
 
-	private def findMappingLocation = {xml ->
+	private findMappingLocation = {xml ->
 
 		// find the location to insert the filter-mapping; needs to be after the 'charEncodingFilter'
 		// which may not exist. should also be before the sitemesh filter.
@@ -131,8 +109,8 @@ Integrate Java Melody Monitor into grails application.
 		//For each service class in Grails, the plugin use groovy meta programming (invokeMethod)
 		//to 'intercept' method call and collect infomation for monitoring purpose.
 		//The code below mimics 'MonitoringSpringInterceptor.invoke()'
-		def SPRING_COUNTER = MonitoringProxy.getSpringCounter();
-		final boolean DISABLED = Boolean.parseBoolean(Parameters.getParameter(Parameter.DISABLED));
+		def SPRING_COUNTER = MonitoringProxy.getSpringCounter()
+		final boolean DISABLED = Boolean.parseBoolean(Parameters.getParameter(Parameter.DISABLED))
 
 		if (DISABLED || !SPRING_COUNTER.isDisplayed()) {
 			return
@@ -147,16 +125,14 @@ Integrate Java Melody Monitor into grails application.
 			serviceClass.metaClass.invokeMethod = {String name, args ->
 				def metaMethod = delegate.metaClass.getMetaMethod(name, args)
 				if (!metaMethod) {
-					List methods = delegate.metaClass.getMethods();
+					List methods = delegate.metaClass.getMethods()
 					boolean found = false
-					for (int i = 0; i < methods.size(); i++) {
-						groovy.lang.MetaMethod method = (groovy.lang.MetaMethod) methods.get(i);
+					for (MetaMethod method in methods) {
 						if (method.getName() == name) {
 							metaMethod = method
 							found = true
 							break
 						}
-
 					}
 					if(!found && delegate.metaClass.properties.find {it.name == name}){
 						def property = delegate."${name}"
@@ -175,27 +151,19 @@ Integrate Java Melody Monitor into grails application.
 					return metaMethod.doMethodInvoke(delegate, args)
 				}
 
-				final String requestName = "${serviceClass.name}.${name}";
+				final String requestName = "${serviceClass.name}.${name}"
 
-				boolean systemError = false;
+				boolean systemError = false
 				try {
-					SPRING_COUNTER.bindContextIncludingCpu(requestName);
+					SPRING_COUNTER.bindContextIncludingCpu(requestName)
 					return metaMethod.doMethodInvoke(delegate, args)
 				} catch (final Error e) {
-					systemError = true;
-					throw e;
+					systemError = true
+					throw e
 				} finally {
-					SPRING_COUNTER.addRequestForCurrentContext(systemError);
+					SPRING_COUNTER.addRequestForCurrentContext(systemError)
 				}
 			}
 		}
-	}
-
-	def onChange = {event ->
-		
-	}
-
-	def onConfigChange = {event ->
-		
 	}
 }

@@ -1,14 +1,16 @@
 package grails.plugin.melody
 
-import grails.util.GrailsUtil
-import grails.util.Holders
+import grails.util.Environment
+
+import org.codehaus.groovy.grails.commons.GrailsApplication
 
 class GrailsMelodyUtil {
-    static ConfigObject getGrailsMelodyConfig() {
-		def config = Holders.grailsApplication.config
-		GroovyClassLoader classLoader = new GroovyClassLoader(GrailsMelodyUtil.getClassLoader())
+
+	static ConfigObject getGrailsMelodyConfig(GrailsApplication application) {
+		def config = application.config
+		GroovyClassLoader classLoader = new GroovyClassLoader(application.getClassLoader())
 		try {
-			config.merge(new ConfigSlurper(GrailsUtil.environment).parse(classLoader.loadClass('GrailsMelodyConfig')))
+			config.merge(new ConfigSlurper(Environment.current.name()).parse(classLoader.loadClass('GrailsMelodyConfig')))
 		} catch (Exception e) {
 			// ignored, use defaults
 		}
