@@ -17,11 +17,17 @@ class GrailsMelodyGrailsPlugin {
 		'shiro'
 	]
 
-	def author = "Liu Chao"
-	def authorEmail = "liuchao@goal98.com"
 	def title = "Grails Java Melody Plugin"
 	def description = 'Integrate Java Melody Monitor into grails application.'
 	def documentation = "http://grails.org/plugin/grails-melody"
+
+	def license = 'APACHE'
+	def developers = [
+		[name: 'Sergio Michels', email: 'sergiomichelss@gmail.com'],
+		[name: 'Liu Chao', email: 'liuchao@goal98.com']
+	]
+	def issueManagement = [system: 'GitHub', url: 'https://github.com/sergiomichels/grails-melody/issues']
+	def scm = [url: 'https://github.com/sergiomichels/grails-melody']
 
 	def doWithSpring = {
 		//Wrap grails datasource with java melody JdbcWapper
@@ -30,7 +36,7 @@ class GrailsMelodyGrailsPlugin {
 
 	def getWebXmlFilterOrder() {
 		def FilterManager = getClass().getClassLoader().loadClass('grails.plugin.webxml.FilterManager')
-		[ monitoring : FilterManager.GRAILS_WEB_REQUEST_POSITION + 200]
+		[monitoring : FilterManager.GRAILS_WEB_REQUEST_POSITION + 200]
 	}
 
 	def doWithWebDescriptor = {xml ->
